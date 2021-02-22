@@ -77,6 +77,11 @@ cc_binary(
 )
 
 dslx_test(
+    name = "dot_product",
+    srcs = ["dot_product.x"],
+)
+
+dslx_test(
     name = "riscv_simple",
     srcs = ["riscv_simple.x"],
     # TODO(hjmontero): run_instruction segfaults.

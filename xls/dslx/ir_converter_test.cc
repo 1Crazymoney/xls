@@ -932,11 +932,11 @@ fn __test_module__f(x: bits[2]) -> bits[8] {
 TEST(IrConverterTest, CountedForWithLoopInvariants) {
   const char* program =
       R"(
-fn f() -> u32 {
-  let outer_thing: u32 = u32:42;
-  let other_outer_thing: u32 = u32:24;
+fn f(outer_thing_1: u32, outer_thing_2: u32) -> u32 {
+  let outer_thing_3: u32 = u32:42;
+  let outer_thing_4: u32 = u32:24;
   for (i, accum): (u32, u32) in range(u32:0, u32:4) {
-    accum + i + outer_thing + other_outer_thing
+    accum + i + outer_thing_1 + outer_thing_2 + outer_thing_3 + outer_thing_4
   }(u32:0)
 }
 )";
@@ -945,19 +945,23 @@ fn f() -> u32 {
       ConvertModuleForTest(program, /*emit_positions=*/false));
   EXPECT_EQ(converted, R"(package test_module
 
-fn ____test_module__f_counted_for_0_body(i: bits[32], accum: bits[32], other_outer_thing: bits[32], outer_thing: bits[32]) -> bits[32] {
-  add.10: bits[32] = add(accum, i, id=10)
-  add.11: bits[32] = add(add.10, outer_thing, id=11)
-  ret add.12: bits[32] = add(add.11, other_outer_thing, id=12)
+fn ____test_module__f_counted_for_0_body(i: bits[32], accum: bits[32], outer_thing_1: bits[32], outer_thing_2: bits[32]) -> bits[32] {
+  add.14: bits[32] = add(accum, i, id=14)
+  add.15: bits[32] = add(add.14, outer_thing_1, id=15)
+  add.16: bits[32] = add(add.15, outer_thing_2, id=16)
+  literal.12: bits[32] = literal(value=42, id=12)
+  add.17: bits[32] = add(add.16, literal.12, id=17)
+  literal.13: bits[32] = literal(value=24, id=13)
+  ret add.18: bits[32] = add(add.17, literal.13, id=18)
 }
 
-fn __test_module__f() -> bits[32] {
-  literal.3: bits[32] = literal(value=0, id=3)
-  literal.2: bits[32] = literal(value=24, id=2)
-  literal.1: bits[32] = literal(value=42, id=1)
-  literal.4: bits[32] = literal(value=0, id=4)
-  literal.5: bits[32] = literal(value=4, id=5)
-  ret counted_for.13: bits[32] = counted_for(literal.3, trip_count=4, stride=1, body=____test_module__f_counted_for_0_body, invariant_args=[literal.2, literal.1], id=13)
+fn __test_module__f(outer_thing_1: bits[32], outer_thing_2: bits[32]) -> bits[32] {
+  literal.5: bits[32] = literal(value=0, id=5)
+  literal.3: bits[32] = literal(value=42, id=3)
+  literal.4: bits[32] = literal(value=24, id=4)
+  literal.6: bits[32] = literal(value=0, id=6)
+  literal.7: bits[32] = literal(value=4, id=7)
+  ret counted_for.19: bits[32] = counted_for(literal.5, trip_count=4, stride=1, body=____test_module__f_counted_for_0_body, invariant_args=[outer_thing_1, outer_thing_2], id=19)
 }
 )");
 }
